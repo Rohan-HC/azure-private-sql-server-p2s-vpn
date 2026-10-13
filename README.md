@@ -70,7 +70,9 @@ Evidence: [SQL demo](evidence/sql-demo-results.png) · [Encrypted connection](ev
 │   ├── sql-vm.bicep
 │   └── vpn-gateway.bicep
 ├── scripts/                       # Original scripts + provided verification helper
-│   └── verify-lab.ps1
+|    |── verify-lab.ps1
+|    ├── configure-sql-firewall.ps1
+|    ├── diagnose-sql.ps1
 ├── sql/
 │   └── 01-demo-database.sql
 ├── docs/
