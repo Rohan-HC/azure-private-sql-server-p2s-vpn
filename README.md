@@ -6,7 +6,7 @@
 
 **Status:** Core lab deployed and validated on 13 October 2026. Production-hardening opportunities are documented separately.
 
-> **Source-code note:** This documentation package supplements an existing local project. Copy it into the existing repository alongside the original `infra/*.bicep` and `scripts/*.ps1` files. Those source files were not provided with the package and are not reconstructed here. See [INTEGRATE-FIRST.md](INTEGRATE-FIRST.md).
+Repository note: This repository contains the original Azure Bicep templates and PowerShell validation scripts. Private certificates, VPN client configurations and credentials are intentionally excluded.
 
 ## Why this project?
 
@@ -85,7 +85,6 @@ Evidence: [SQL demo](evidence/sql-demo-results.png) · [Encrypted connection](ev
 ├── evidence/
 │   ├── sql-demo-results.png
 │   └── encrypted-connection.png
-├── CV-LINKEDIN.md
 ├── .gitignore.recommended
 └── README.md
 ```
@@ -118,6 +117,5 @@ See the [full deployment runbook](docs/deployment.md). **This is not a free depl
 - [Troubleshooting log](docs/troubleshooting.md)
 - [Cost management and teardown](docs/cost-management.md)
 - [Evidence](evidence/README.md)
-- [CV and LinkedIn descriptions](CV-LINKEDIN.md)
 
 This is a **demonstrated development lab**, not a production HA/DR solution. It does not claim automated database backups, full CA-validated TLS, a least-privilege application account, monitoring/alerting or a tested CI/CD deployment pipeline.
