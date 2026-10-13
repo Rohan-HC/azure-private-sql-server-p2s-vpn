@@ -1,0 +1,26 @@
+
+/certs/
+
+# VPN certificates and private keys
+*.pfx
+*.p12
+*.key
+*.pem
+
+# VPN client profiles and downloads
+/personal-vpn-client/
+/personal-vpn-client.zip
+**/azurevpnconfig*.xml
+**/vpnconfig.ovpn
+
+# Generated Bicep files and backups
+/infra/*.json
+*.bicep.bak
+
+# Local secrets and temporary files
+.env
+.env.*
+!.env.example
+*.secret
+*.log
+*.rdp
