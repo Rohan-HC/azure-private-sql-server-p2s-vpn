@@ -1,0 +1,41 @@
+digraph architecture {
+    graph [label="Azure Private SQL Server · P2S VPN", labelloc=t, fontsize=20,
+           fontname="Arial", bgcolor="white", rankdir=LR, nodesep=.55, ranksep=.8,
+           pad=.35, splines=polyline];
+    node [shape=box, style="rounded,filled", color="#5d7187", fillcolor="#f4f7fa",
+          fontname="Arial", fontsize=11, margin=".18,.12"];
+    edge [color="#326b88", penwidth=1.8, arrowsize=.75, fontname="Arial", fontsize=10];
+
+    laptop [label="Windows laptop\nAzure VPN Client + SSMS\nP2S IP: 172.16.0.2", fillcolor="#e7f1ff"];
+    internet [label="Public Internet\n(only VPN gateway exposed)", fillcolor="#ffffff"];
+    outbound [label="Internet-bound\ndestinations", fillcolor="#ffffff"];
+
+    subgraph cluster_azure {
+        label="Azure · Sweden Central · resource group: rg-sqllab-personal";
+        fontsize=12; fontname="Arial"; style="rounded,filled"; color="#b9c9d9"; fillcolor="#f6f9fc";
+        subgraph cluster_vnet {
+            label="VNet 10.50.0.0/16";
+            fontsize=12; fontname="Arial"; style="rounded,filled"; color="#a1b7ca"; fillcolor="#eef5fb";
+
+            subgraph cluster_gateway {
+                label="GatewaySubnet · 10.50.255.0/27";
+                fontsize=10; style="rounded,dashed"; color="#b7c4cf";
+                gateway [label="VPN Gateway\nVpnGw1AZ\nCertificate-authenticated OpenVPN", fillcolor="#dcf3ed", color="#2a9687"];
+            }
+            subgraph cluster_workload {
+                label="snet-workload · 10.50.1.0/24";
+                fontsize=10; style="rounded,dashed"; color="#b7c4cf";
+                nsg [label="NSG\nAllow TCP 1433\nfrom 172.16.0.0/24", fillcolor="#fff2d9", color="#c18b3e"];
+                vm [label="Windows Server 2022\nSQL Server 2022 Developer\n10.50.1.4 (private IP)\nWindows Firewall TCP 1433", fillcolor="#dcf3ed", color="#2a9687"];
+                nat [label="NAT Gateway\nOutbound SNAT only", fillcolor="#fff2d9", color="#c18b3e"];
+            }
+            reserved [label="snet-private-endpoints\n10.50.2.0/24\nReserved / unused", style="rounded,dashed,filled", fillcolor="#f5f5f5"];
+        }
+    }
+    laptop -> internet [label="Encrypted P2S tunnel"];
+    internet -> gateway [label="VPN public endpoint"];
+    gateway -> nsg [label="Route to VNet"];
+    nsg -> vm [label="TCP 1433 permitted"];
+    vm -> nat [label="Outbound", color="#9aa3ad"];
+    nat -> outbound [color="#9aa3ad"];
+}
