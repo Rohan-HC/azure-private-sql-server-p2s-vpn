@@ -1,0 +1,37 @@
+name: Validate Azure Bicep
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - ".github/workflows/bicep-validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bicep-validate:
+    name: Build and lint existing infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Compile and lint every Bicep entrypoint
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            set -euo pipefail
+            az bicep install --only-show-errors
+            mkdir -p /tmp/bicep-compiled
+            for source in infra/*.bicep; do
+              name="$(basename "$source" .bicep)"
+              echo "Building $source"
+              az bicep build --file "$source" --outfile "/tmp/bicep-compiled/${name}.json"
+              echo "Linting $source"
+              az bicep lint --file "$source"
+            done
+
+# Validation only: no Azure login, subscription changes, or deployments.
