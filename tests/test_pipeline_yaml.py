@@ -25,6 +25,7 @@ class PipelineContractTest(unittest.TestCase):
         self.assertIn('Deploy', stages)
         self.assertNotIn('sql-p2s-lab-secrets', str(stages['Validate']))
         self.assertIn('sql-p2s-lab-secrets', str(stages['Deploy']))
+        self.assertIn("${{ if ne(parameters.action, 'validate') }}", str(stages['Deploy']['variables']))
         self.assertIn("Build.Reason'], 'Manual'", stages['Deploy']['condition'])
         self.assertIn("Build.SourceBranch'], 'refs/heads/main'", stages['Deploy']['condition'])
 

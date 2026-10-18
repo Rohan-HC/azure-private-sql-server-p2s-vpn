@@ -54,7 +54,8 @@ stages:
     dependsOn: Validate
     condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne('${{ parameters.action }}', 'validate'))
     variables:
-      - group: sql-p2s-lab-secrets
+      - ${{ if ne(parameters.action, 'validate') }}:
+          - group: sql-p2s-lab-secrets
     jobs:
       - job: Apply
         steps:
