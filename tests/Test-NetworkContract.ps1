@@ -60,6 +60,13 @@ foreach ($port in @('sqlPort', '3389')) {
 $icmp = $rules | Where-Object { $_.properties.protocol -eq 'Icmp' } | Select-Object -First 1
 Assert-That ($null -ne $icmp) 'ICMP rule missing'
 Assert-That ($icmp.properties.sourceAddressPrefix -match 'vpnClientAddressPool') 'ICMP rule is not scoped to VPN clients'
+foreach ($name in @('Deny-Other-SQL', 'Deny-Other-RDP', 'Deny-Other-ICMP')) {
+    $deny = $rules | Where-Object name -eq $name | Select-Object -First 1
+    Assert-That ($null -ne $deny) "$name missing; default AllowVnetInBound would admit other VNet clients"
+    Assert-That ($deny.properties.access -eq 'Deny' -and $deny.properties.direction -eq 'Inbound') "$name must deny inbound"
+    Assert-That ($deny.properties.sourceAddressPrefix -eq '*') "$name must cover other source networks"
+    Assert-That ($deny.properties.priority -gt 120 -and $deny.properties.priority -lt 65000) "$name priority must follow P2S allows and precede defaults"
+}
 
 $subnets = @($resources | Where-Object type -eq 'Microsoft.Network/virtualNetworks/subnets')
 $workload = $subnets | Where-Object { $_.name -match 'snet-workload' } | Select-Object -First 1

@@ -79,6 +79,45 @@ resource workloadNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
           destinationAddressPrefix: 'VirtualNetwork'
         }
       }
+      {
+        name: 'Deny-Other-SQL'
+        properties: {
+          priority: 200
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: string(sqlPort)
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: 'VirtualNetwork'
+        }
+      }
+      {
+        name: 'Deny-Other-RDP'
+        properties: {
+          priority: 210
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '3389'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: 'VirtualNetwork'
+        }
+      }
+      {
+        name: 'Deny-Other-ICMP'
+        properties: {
+          priority: 220
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: 'Icmp'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: 'VirtualNetwork'
+        }
+      }
     ]
   }
 }
