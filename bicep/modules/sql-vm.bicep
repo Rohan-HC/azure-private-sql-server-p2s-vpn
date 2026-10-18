@@ -4,9 +4,14 @@ param subnetId string
 param vmName string = 'vm-sqllab2-sql'
 param vmSize string = 'Standard_D2as_v5'
 param adminUsername string = 'labadmin'
+param sqlAdminUsername string = 'sqladmin'
+param sqlPort int = 1433
 
 @secure()
 param adminPassword string
+
+@secure()
+param sqlAdminPassword string
 
 param dataDiskSizeGb int = 128
 param enableAcceleratedNetworking bool = true
@@ -110,6 +115,14 @@ resource sqlIaas 'Microsoft.SqlVirtualMachine/sqlVirtualMachines@2023-10-01' = {
     sqlServerLicenseType: 'PAYG'
     sqlImageSku: 'Developer'
     sqlManagement: 'Full'
+    serverConfigurationsManagementSettings: {
+      sqlConnectivityUpdateSettings: {
+        connectivityType: 'PRIVATE'
+        port: sqlPort
+        sqlAuthUpdateUserName: sqlAdminUsername
+        sqlAuthUpdatePassword: sqlAdminPassword
+      }
+    }
   }
 }
 
