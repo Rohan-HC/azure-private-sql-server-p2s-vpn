@@ -1,5 +1,11 @@
 # Azure Private SQL Server Infrastructure with Point-to-Site VPN
 
+## Two independent labs
+
+This repository now includes a second, disposable private SQL lab with Key Vault private networking, VM managed identity, automated SQL configuration, and an Azure DevOps pipeline. Its Bicep stack is under [`bicep/`](bicep/), with [setup](docs/cicd-lab.md) and [validation and teardown](docs/cicd-lab-operations.md) runbooks. Its planned resource group is `rg-sqllab-cicd-dev`, VNet is `10.60.0.0/16`, and P2S pool is `172.17.0.0/24`. Deployment results will be recorded in [separate evidence](evidence/cicd-lab/README.md).
+
+The original, already validated lab described below remains under `infra/` and in `rg-sqllab-personal`. Its earlier evidence does not establish that the new lab has deployed.
+
 **A reproducible Azure infrastructure lab deploying SQL Server 2022 on a private Windows VM, accessible from a remote Windows laptop only through certificate-authenticated Point-to-Site VPN.**
 
 **Stack:** Microsoft Azure · Azure Bicep · Azure CLI · PowerShell · SQL Server 2022 · Windows Server 2022 · Azure VPN Gateway · SSMS

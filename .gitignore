@@ -1,5 +1,6 @@
 
 /certs/
+/vpn-client-profiles/
 
 # VPN certificates and private keys
 *.pfx
@@ -15,6 +16,7 @@
 
 # Generated Bicep files and backups
 /infra/*.json
+/bicep/**/*.json
 *.bicep.bak
 
 # Local secrets and temporary files
@@ -24,3 +26,5 @@
 *.secret
 *.log
 *.rdp
+__pycache__/
+*.pyc

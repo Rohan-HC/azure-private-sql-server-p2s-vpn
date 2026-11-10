@@ -1,0 +1,105 @@
+name: sqllab-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+
+parameters:
+  - name: action
+    displayName: Deployment action
+    type: string
+    default: validate
+    values:
+      - validate
+      - what-if
+      - create
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Validate
+    displayName: Validate infrastructure and contracts
+    jobs:
+      - job: Checks
+        steps:
+          - checkout: self
+            persistCredentials: false
+          - bash: |
+              set -euo pipefail
+              az bicep version
+              az bicep build --file bicep/main.bicep --outfile "$(Agent.TempDirectory)/main.json"
+              az bicep lint --file bicep/main.bicep
+              az bicep build-params --file bicep/parameters/dev.bicepparam --outfile "$(Agent.TempDirectory)/dev.parameters.json"
+              python -m pip install --quiet PyYAML
+              python -m unittest discover -s tests -p test_pipeline_yaml.py
+            displayName: Bicep and pipeline contracts
+            env:
+              WINDOWS_ADMIN_PASSWORD: DummyWindowsPassword!123
+              SQL_ADMIN_PASSWORD: DummySqlPassword!123
+              VPN_ROOT_CERT_DATA: RHVtbXlQdWJsaWNDZXJ0
+          - pwsh: |
+              $ErrorActionPreference = 'Stop'
+              foreach ($test in @(Get-ChildItem tests/Test-*.ps1 | Select-Object -ExpandProperty FullName)) {
+                & pwsh -NoProfile -File $test
+                if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+              }
+            displayName: Infrastructure contract tests
+
+  - stage: Deploy
+    displayName: Manual Azure deployment
+    dependsOn: Validate
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne('${{ parameters.action }}', 'validate'))
+    variables:
+      - ${{ if ne(parameters.action, 'validate') }}:
+          - group: sql-p2s-lab-secrets
+    jobs:
+      - job: Apply
+        steps:
+          - checkout: self
+            persistCredentials: false
+          - task: AzureCLI@2
+            displayName: Preview resource changes
+            condition: eq('${{ parameters.action }}', 'what-if')
+            inputs:
+              azureSubscription: sc-sqllab-subscription
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                az deployment sub what-if \
+                  --name sqllab-cicd-dev \
+                  --location swedencentral \
+                  --template-file bicep/main.bicep \
+                  --parameters bicep/parameters/dev.bicepparam \
+                  --query "changes[].{resourceId:resourceId,changeType:changeType}" \
+                  --output table \
+                  --only-show-errors
+            env:
+              WINDOWS_ADMIN_PASSWORD: $(windowsAdminPassword)
+              SQL_ADMIN_PASSWORD: $(sqlAdminPassword)
+              VPN_ROOT_CERT_DATA: $(vpnRootCertData)
+          - task: AzureCLI@2
+            displayName: Create separate lab
+            condition: eq('${{ parameters.action }}', 'create')
+            inputs:
+              azureSubscription: sc-sqllab-subscription
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                az deployment sub create \
+                  --name sqllab-cicd-dev \
+                  --location swedencentral \
+                  --template-file bicep/main.bicep \
+                  --parameters bicep/parameters/dev.bicepparam \
+                  --query "properties.outputs.{resourceGroupName:resourceGroupName.value,vmName:vmName.value,vmPrivateIpAddress:vmPrivateIpAddress.value,keyVaultName:keyVaultName.value,vpnGatewayName:vpnGatewayName.value,vpnGatewayPublicIp:vpnGatewayPublicIp.value,natGatewayPublicIp:natGatewayPublicIp.value,vpnClientAddressPool:vpnClientAddressPool.value,databaseName:databaseName.value}" \
+                  --output json \
+                  --only-show-errors
+            env:
+              WINDOWS_ADMIN_PASSWORD: $(windowsAdminPassword)
+              SQL_ADMIN_PASSWORD: $(sqlAdminPassword)
+              VPN_ROOT_CERT_DATA: $(vpnRootCertData)
